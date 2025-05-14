@@ -20,6 +20,7 @@ type Contact = {
   lastMessageTime?: number;
   unreadCount: number;
   isOnline: boolean;
+  isBlocked?: boolean;
 };
 
 type ChatContextType = {
@@ -29,6 +30,9 @@ type ChatContextType = {
   setActiveChat: (contact: Contact | null) => void;
   sendMessage: (text: string) => void;
   addContact: (email: string) => Promise<void>;
+  deleteContact: (contactId: string) => void;
+  blockContact: (contactId: string) => void;
+  clearChatHistory: (contactId: string) => void;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -233,6 +237,82 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("chatContacts", JSON.stringify(updatedContacts));
   };
 
+  // Delete contact
+  const deleteContact = (contactId: string) => {
+    // Remove from contacts list
+    setContacts((prevContacts) => prevContacts.filter(contact => contact.id !== contactId));
+    
+    // If this was the active chat, clear it
+    if (activeChat && activeChat.id === contactId) {
+      setActiveChat(null);
+    }
+    
+    // Update local storage
+    const storedContacts = localStorage.getItem("chatContacts");
+    if (storedContacts) {
+      try {
+        const parsedContacts = JSON.parse(storedContacts);
+        const updatedStoredContacts = parsedContacts.filter((c: Contact) => c.id !== contactId);
+        localStorage.setItem("chatContacts", JSON.stringify(updatedStoredContacts));
+      } catch (e) {
+        console.error("Error updating stored contacts:", e);
+      }
+    }
+    
+    // Clear chat history from local storage
+    if (user) {
+      const chatKey = `chat_${user.id}_${contactId}`;
+      localStorage.removeItem(chatKey);
+    }
+  };
+  
+  // Block contact
+  const blockContact = (contactId: string) => {
+    setContacts((prevContacts) => 
+      prevContacts.map(contact => 
+        contact.id === contactId 
+          ? { ...contact, isBlocked: true } 
+          : contact
+      )
+    );
+    
+    // Update local storage
+    const storedContacts = localStorage.getItem("chatContacts");
+    if (storedContacts) {
+      try {
+        const parsedContacts = JSON.parse(storedContacts);
+        const updatedStoredContacts = parsedContacts.map((c: Contact) => 
+          c.id === contactId ? { ...c, isBlocked: true } : c
+        );
+        localStorage.setItem("chatContacts", JSON.stringify(updatedStoredContacts));
+      } catch (e) {
+        console.error("Error updating stored contacts:", e);
+      }
+    }
+  };
+  
+  // Clear chat history
+  const clearChatHistory = (contactId: string) => {
+    if (activeChat && activeChat.id === contactId) {
+      setMessages([]);
+    }
+    
+    // Clear from local storage
+    if (user) {
+      const chatKey = `chat_${user.id}_${contactId}`;
+      localStorage.removeItem(chatKey);
+    }
+    
+    // Update last message in contacts list
+    setContacts((prevContacts) => 
+      prevContacts.map(contact => 
+        contact.id === contactId 
+          ? { ...contact, lastMessage: undefined, lastMessageTime: undefined } 
+          : contact
+      )
+    );
+  };
+
   const value = {
     activeChat,
     contacts,
@@ -240,6 +320,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setActiveChat,
     sendMessage,
     addContact,
+    deleteContact,
+    blockContact,
+    clearChatHistory,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

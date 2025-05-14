@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Send, Phone, Video, MoreVertical } from "lucide-react";
+import { Send, Phone, Video, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useChat } from "@/contexts/ChatContext";
@@ -13,13 +13,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
 const ChatWindow = () => {
-  const { activeChat, messages, sendMessage } = useChat();
+  const { activeChat, messages, sendMessage, deleteContact, blockContact, clearChatHistory } = useChat();
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
+  const [confirmClearHistoryOpen, setConfirmClearHistoryOpen] = useState(false);
   
   // Scroll to bottom when messages update
   useEffect(() => {
@@ -39,6 +45,47 @@ const ChatWindow = () => {
       hour: '2-digit', 
       minute: '2-digit' 
     });
+  };
+
+  const handleViewProfile = () => {
+    toast({
+      title: "View Profile",
+      description: `Viewing ${activeChat?.name}'s profile`,
+    });
+    // In a real app, you'd navigate to the profile page or open a profile modal
+  };
+
+  const handleClearChatHistory = () => {
+    if (activeChat) {
+      clearChatHistory(activeChat.id);
+      setConfirmClearHistoryOpen(false);
+      toast({
+        title: "Chat cleared",
+        description: "Chat history has been cleared successfully",
+      });
+    }
+  };
+
+  const handleBlockContact = () => {
+    if (activeChat) {
+      blockContact(activeChat.id);
+      setConfirmBlockOpen(false);
+      toast({
+        title: "Contact blocked",
+        description: `${activeChat.name} has been blocked`,
+      });
+    }
+  };
+
+  const handleDeleteContact = () => {
+    if (activeChat) {
+      deleteContact(activeChat.id);
+      setConfirmDeleteOpen(false);
+      toast({
+        title: "Contact deleted",
+        description: `${activeChat.name} has been deleted from your contacts`,
+      });
+    }
   };
 
   if (!activeChat) {
@@ -95,9 +142,19 @@ const ChatWindow = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem className={cn("", isMobile && "h-11 text-base py-2")}>View profile</DropdownMenuItem>
-              <DropdownMenuItem className={cn("", isMobile && "h-11 text-base py-2")}>Clear chat history</DropdownMenuItem>
-              <DropdownMenuItem className={cn("", isMobile && "h-11 text-base py-2")}>Block contact</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleViewProfile} className={cn("", isMobile && "h-11 text-base py-2")}>
+                View profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setConfirmClearHistoryOpen(true)} className={cn("", isMobile && "h-11 text-base py-2")}>
+                Clear chat history
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setConfirmBlockOpen(true)} className={cn("", isMobile && "h-11 text-base py-2")}>
+                Block contact
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setConfirmDeleteOpen(true)} className={cn("text-destructive", isMobile && "h-11 text-base py-2")}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete contact
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -157,6 +214,52 @@ const ChatWindow = () => {
           </Button>
         </form>
       </div>
+
+      {/* Confirmation Dialogs */}
+      <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Contact</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {activeChat.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteContact}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmBlockOpen} onOpenChange={setConfirmBlockOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Block Contact</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to block {activeChat.name}? They will not be able to send you messages.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmBlockOpen(false)}>Cancel</Button>
+            <Button onClick={handleBlockContact}>Block</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmClearHistoryOpen} onOpenChange={setConfirmClearHistoryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clear Chat History</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to clear the chat history with {activeChat.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmClearHistoryOpen(false)}>Cancel</Button>
+            <Button onClick={handleClearChatHistory}>Clear</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
