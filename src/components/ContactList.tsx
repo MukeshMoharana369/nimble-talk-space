@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Search, Plus, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,13 @@ const ContactList = ({ onMenuToggle }: { onMenuToggle?: () => void }) => {
     }
   };
 
+  const handleContactSelect = (contact: any) => {
+    setActiveChat(contact);
+    if (isMobile && onMenuToggle) {
+      onMenuToggle();
+    }
+  };
+
   const formatTime = (timestamp?: number) => {
     if (!timestamp) return "";
     
@@ -66,15 +74,16 @@ const ContactList = ({ onMenuToggle }: { onMenuToggle?: () => void }) => {
     <div className="h-full flex flex-col bg-background border-r">
       <div className="p-3 flex items-center justify-between border-b">
         {isMobile && (
-          <Button variant="ghost" size="icon" onClick={onMenuToggle}>
-            <Menu size={20} />
+          <Button variant="ghost" size="icon" onClick={onMenuToggle} className="h-10 w-10">
+            <Menu size={24} />
+            <span className="sr-only">Close menu</span>
           </Button>
         )}
         <h2 className="text-lg font-semibold flex-1 text-center">Chats</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Plus size={20} />
+            <Button variant="ghost" size="icon" className="h-10 w-10">
+              <Plus size={24} />
               <span className="sr-only">Add contact</span>
             </Button>
           </DialogTrigger>
@@ -92,7 +101,7 @@ const ContactList = ({ onMenuToggle }: { onMenuToggle?: () => void }) => {
                   onChange={(e) => setNewContactEmail(e.target.value)}
                 />
               </div>
-              <Button onClick={handleAddContact}>Add Contact</Button>
+              <Button onClick={handleAddContact} className="h-11 w-full">Add Contact</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -100,10 +109,10 @@ const ContactList = ({ onMenuToggle }: { onMenuToggle?: () => void }) => {
       
       <div className="p-3 border-b">
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Search contacts..."
-            className="pl-9"
+            className="pl-10 h-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -116,24 +125,24 @@ const ContactList = ({ onMenuToggle }: { onMenuToggle?: () => void }) => {
             {filteredContacts.map((contact) => (
               <div
                 key={contact.id}
-                className="p-3 flex items-center gap-3 hover:bg-muted/50 cursor-pointer"
-                onClick={() => setActiveChat(contact)}
+                className="p-4 flex items-center gap-3 hover:bg-muted/50 cursor-pointer active:bg-muted/70"
+                onClick={() => handleContactSelect(contact)}
               >
                 <div className="relative flex-shrink-0">
                   <img
                     src={contact.avatar || "https://via.placeholder.com/40"}
                     alt={contact.name}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover"
                   />
                   <span className={cn(
-                    "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background",
+                    "absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-background",
                     contact.isOnline ? "bg-online" : "bg-offline"
                   )}></span>
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline">
-                    <h3 className="font-medium truncate">{contact.name}</h3>
+                    <h3 className="font-medium truncate text-base">{contact.name}</h3>
                     <span className="text-xs text-muted-foreground">
                       {formatTime(contact.lastMessageTime)}
                     </span>
@@ -143,7 +152,7 @@ const ContactList = ({ onMenuToggle }: { onMenuToggle?: () => void }) => {
                       {contact.lastMessage || "No messages yet"}
                     </p>
                     {contact.unreadCount > 0 && (
-                      <Badge variant="default" className="rounded-full">
+                      <Badge variant="default" className="rounded-full min-w-[1.5rem] h-6 flex items-center justify-center">
                         {contact.unreadCount}
                       </Badge>
                     )}

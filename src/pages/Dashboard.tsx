@@ -3,7 +3,7 @@ import { useState } from "react";
 import ContactList from "@/components/ContactList";
 import ChatWindow from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Menu } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,14 +19,14 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -121,6 +121,14 @@ const Dashboard = () => {
     <div className="h-screen flex flex-col bg-background">
       <header className="border-b p-3 flex items-center justify-between">
         <div className="flex items-center space-x-2">
+          {isMobile && (
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="mr-2">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+          )}
           <h1 className="text-xl font-bold">ChatApp</h1>
         </div>
         <DropdownMenu>
@@ -153,7 +161,7 @@ const Dashboard = () => {
         {isMobile ? (
           <>
             <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-              <SheetContent side="left" className="p-0 w-[280px] sm:w-[350px]">
+              <SheetContent side="left" className="p-0 w-[80%] sm:w-[350px]">
                 <ContactList onMenuToggle={() => setIsSidebarOpen(false)} />
               </SheetContent>
             </Sheet>
