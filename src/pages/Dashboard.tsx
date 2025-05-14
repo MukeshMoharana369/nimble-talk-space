@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,10 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [name, setName] = useState(user?.name || "");
+  const [bio, setBio] = useState("I love chatting with friends!");
+  const [status, setStatus] = useState(true);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -39,26 +43,61 @@ const Dashboard = () => {
     navigate("/login");
   };
 
-  const ProfileDialog = () => {
-    const [name, setName] = useState(user?.name || "");
-    const [bio, setBio] = useState("I love chatting with friends!");
-    const [status, setStatus] = useState(true);
+  const handleProfileSave = () => {
+    toast({
+      title: "Profile updated",
+      description: "Your profile has been updated successfully",
+    });
+    setIsProfileDialogOpen(false);
+  };
 
-    const handleSave = () => {
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
-      });
-    };
-
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </DropdownMenuItem>
-        </DialogTrigger>
+  return (
+    <div className="h-screen flex flex-col bg-background">
+      <header className="border-b p-3 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          {isMobile && (
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="mr-2">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+          )}
+          <h1 className="text-xl font-bold">ChatApp</h1>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative rounded-full h-9 w-9 p-0">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.avatar} alt={user?.name} />
+                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={(e) => {
+              e.preventDefault();
+              setIsProfileDialogOpen(true);
+            }}>
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Logout</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+      
+      <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
@@ -110,52 +149,10 @@ const Dashboard = () => {
                 Toggle
               </Button>
             </div>
-            <Button className="w-full" onClick={handleSave}>Save Changes</Button>
+            <Button className="w-full" onClick={handleProfileSave}>Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>
-    );
-  };
-  
-  return (
-    <div className="h-screen flex flex-col bg-background">
-      <header className="border-b p-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          {isMobile && (
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="mr-2">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </SheetTrigger>
-          )}
-          <h1 className="text-xl font-bold">ChatApp</h1>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative rounded-full h-9 w-9 p-0">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <ProfileDialog />
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Logout</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
       
       <main className="flex-1 flex overflow-hidden">
         {isMobile ? (
