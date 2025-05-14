@@ -22,12 +22,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SettingsDialog from "@/components/SettingsDialog";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [name, setName] = useState(user?.name || "");
   const [bio, setBio] = useState("I love chatting with friends!");
   const [status, setStatus] = useState(true);
@@ -77,14 +79,11 @@ const Dashboard = () => {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={(e) => {
-              e.preventDefault();
-              setIsProfileDialogOpen(true);
-            }}>
+            <DropdownMenuItem onSelect={() => setIsProfileDialogOpen(true)}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setIsSettingsDialogOpen(true)}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
@@ -153,6 +152,12 @@ const Dashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Settings Dialog */}
+      <SettingsDialog 
+        isOpen={isSettingsDialogOpen} 
+        onOpenChange={setIsSettingsDialogOpen} 
+      />
       
       <main className="flex-1 flex overflow-hidden">
         {isMobile ? (
